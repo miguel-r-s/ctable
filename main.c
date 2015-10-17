@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "table.h"
 
 Table* tab;
@@ -7,8 +8,7 @@ Type* types;
 
 void create_headers(int n_cols, char** names) {
 
-	types = malloc( n_cols * sizeof(Type));
-	
+	types = malloc(n_cols * sizeof(Type));	
 	types[0] = INT;
 	types[1] = STRING;
 	types[2] = CHAR;
@@ -21,27 +21,48 @@ void free_all() {
 	free(types);
 }
 
-int main(  ) {
+int main( int argc, char** argv ) {
 
 	int n_cols = 3;
-	char* cols[3] = {"col1", "this is the name of the column", "column3"};
-	char* column1;
+	char* cols[3] = {"integer column", "string column", "char column"};
+	int* integer_column;
+	char* char_column;
 	int i, n_elements; 
 	
 	create_headers(n_cols, cols);
 	print_table(tab);
 	
-	read_file(tab, "test2.dat");
+	assert(argc > 1);
+	read_file(tab, argv[1]);
 	printf("\n\n");
 	print_table(tab);
 	
-	column1 = (char*)get_column(tab, 2, &n_elements);
+	integer_column = (int*)get_column(tab, 0, &n_elements);
 	for( i = 0; i < n_elements; i++ ) {
-		printf("%c ", column1[i]);
+		printf("%d ", integer_column[i]);
 	}
 	printf("\n");
-	free(column1);
+	char_column = (char*)get_column(tab, 2, &n_elements);
+	for( i = 0; i < n_elements; i++ ) {
+		printf("%c ", char_column[i]);
+	}
+	printf("\n");
+	
+	swap_columns(tab, 0, 2);
+	
+	free(integer_column);
+	free(char_column);
+	
+	integer_column = (int*)get_column(tab, 2, &n_elements);
+	for( i = 0; i < n_elements; i++ ) {
+		printf("%d ", integer_column[i]);
+	}
+	printf("\n");
+	
+	free(integer_column);
+	print_table(tab);
 	free_all();
 	
 	return 0;
 }
+

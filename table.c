@@ -10,7 +10,7 @@ struct column {
 
 	char* name;
 	int width;
-	char** content;
+	void* content;
 	Type type;
 };
 
@@ -44,7 +44,6 @@ Table* new_table(int n_cols, char** column_names, Type* types) {
 
 char* table_format_string(Table* tab) {
 	
-	
 	int i;
 	int len = 2*tab->n_cols;
 	int size = len + strlen("\n");
@@ -72,18 +71,68 @@ int count_lines(FILE* file) {
 	return n_lines;
 }
 
-int width(char* content) {
-	return strlen(content);
+char* stringify_entry(void* col_content, int row, Type type) {
+	
+	char str[2048];
+	char* ret;
+	char *form = format_string(type);
+	memset(str, '\0', 1024);
+
+	if(type == CHAR)
+		sprintf(str, form, ((char*)col_content)[row]);
+	else if(type == STRING)
+		sprintf(str, form, ((char**)col_content)[row]);
+	else if(type == INT)
+		sprintf(str, form, ((int*)col_content)[row]);
+	else if(type == FLOAT)
+		sprintf(str, form, ((float*)col_content)[row]);
+	else if(type == DOUBLE)
+		sprintf(str, form, ((double*)col_content)[row]);
+	else fatal_error("width(...)", "Unknown type!");	
+	
+	ret = malloc(strlen(str) + 1);
+	strcpy(ret, str);
+	
+	return ret;
 }
 
+int width(void* col_content, int row, Type type) {
+
+	char* entry_str = stringify_entry(col_content, row, type);
+	int len = strlen(entry_str);
+	free(entry_str);
+
+	return len;
+}
+
+/* Insert always reads the content as a string, then 
+converts it to put in the table */
 void insert(Table* tab, char* content, int col, int row) {
 	
 	Column column = tab->columns[col];
-	char* ptr = malloc(strlen(content) + 1);
-	strcpy(ptr, content);
+	Type type = column.type;
 	
-	column.content[row] = ptr;
-	column.width = max(tab->columns[col].width, width(content));
+	if(type == CHAR) {
+		((char*)column.content)[row] = *content;
+	}
+	else if(type == STRING) {
+		int size = strlen(content) + 1;
+		char* ptr = malloc(size);
+		strcpy(ptr, content);
+		((void**)column.content)[row] = (void*)ptr;
+	}
+	else if(type == INT) {
+		((int*)column.content)[row] = atoi(content);
+	}
+	else if(type == FLOAT) {
+		((float*)column.content)[row] = (float)atof(content);
+	}
+	else if(type == DOUBLE) {
+		((double*)column.content)[row] = atof(content);
+	}
+	else fatal_error("width(...)", "Unknown type!");
+	
+	column.width = max(column.width, width(column.content, row, column.type));
 }
 
 void read_file(Table* tab, char* file_name) {
@@ -94,7 +143,7 @@ void read_file(Table* tab, char* file_name) {
 	char buff[2048];
 	FILE* table_file;
 	
-	memset(buff, '\0', 2028); 
+	memset(buff, '\0', 2048); 
 	table_file = fopen(file_name, "r");
 
 	n_lines = count_lines(table_file);
@@ -103,16 +152,16 @@ void read_file(Table* tab, char* file_name) {
 	/* Realloc columns */
 	for( col = 0; col < n_cols; col++ ) {
 		tab->columns[col].content = realloc(tab->columns[col].content, 
-									tab->n_rows * sizeof(char*)); 
+									tab->n_rows * type_size(tab->columns[col].type)); 
 	}
 	
 	for( i = 0; i < n_lines; i++ ) {
-		n_rows++;
 		for( col = 0; col < n_cols; col++ ) {
 		
 			fscanf(table_file, "%s", buff);		
-			insert(tab, buff, col, n_rows - 1);			
+			insert(tab, buff, col, n_rows);			
 		}
+		n_rows++;
 	}
 	fclose(table_file);
 }
@@ -127,13 +176,16 @@ int* get_cols_width(Table* tab) {
 	return cols_width;
 }
 
-int print_content( char* content ) {
+int print_content( void* col_content, int row, Type type ) {
 
-	if( content == NULL ) 
-		fatal_error("print_content(...)", "NULL content");
+	char* content = stringify_entry(col_content, row, type);
+	if( content == NULL ) {
+		content = "<null>";
+	}
 
 	fprintf(stdout, "%s", content);
-	return width(content);
+	free(content);
+	return width(col_content, row, type);
 }
 
 void print_table(Table* tab) {
@@ -158,8 +210,9 @@ void print_table(Table* tab) {
 		printf("%c ", VLINE);
 		for( i = 0; i < n_cols; i++ ) {
 		
-			char* content = tab->columns[i].content[j];
-			printed_len = print_content( content );
+			void* content = tab->columns[i].content;
+			Type type = tab->columns[i].type;
+			printed_len = print_content( content, j, type );
 			print_spaces(cols_width[i] - printed_len + 1);
 			printf("%c ", VLINE);
 		}
@@ -175,7 +228,8 @@ void free_table(Table* tab) {
 	for( col = 0; col < tab->n_cols; col++ ) {
 		free(tab->columns[col].name);
 		for( row = 0; row < tab->n_rows; row++ ) {
-			free(tab->columns[col].content[row]);
+			if( tab->columns[col].type == STRING)
+				free(((void**)tab->columns[col].content)[row]);
 		}
 		free(tab->columns[col].content);
 	}
@@ -185,53 +239,31 @@ void free_table(Table* tab) {
 
 void* get_column(Table* tab, int col, int* n_elements){
 	
-	int i, n_rows = tab->n_rows;
+	int n_rows = tab->n_rows;
 	Column column = tab->columns[col];
 	Type type = column.type;
+	int size = n_rows * type_size(type);
+	void* ptr;
 	*n_elements = n_rows;
+
+	ptr = malloc( size );
+	ptr = memcpy( ptr, column.content, size );
+	return ptr;
+}
+
+Type get_column_type(Table* tab, int col){
+	return tab->columns[col].type;
+}
+
+void swap_columns(Table* tab, int col1, int col2){
 	
-	if( type == STRING ){
-		error("get_column(...)", "This part is not implemented yet!");
-		return NULL;
-	}
-	else {
-		
-		if( type == CHAR ){
-		
-			char* ptr = malloc( n_rows * type_size(type));
-			for( i = 0; i < n_rows; i++ ){
-				ptr[i] = *(column.content[i]);
-			}
-			return (void*)ptr;
-		}
-		else if( type == INT ) {
-			
-			int* ptr = malloc( n_rows * type_size(type));
-			for( i = 0; i < n_rows; i++ ){
-				ptr[i] = atoi(column.content[i]);
-			}
-			return (void*)ptr;
-		}
-		else if( type == FLOAT ) {
-			float* ptr = malloc( n_rows * type_size(type));
-			for( i = 0; i < n_rows; i++ ){
-				ptr[i] = (float)atof(column.content[i]);
-			}
-			return (void*)ptr;
-		}
-		else if( type == DOUBLE ) {
-			
-			double* ptr = malloc( n_rows * type_size(type));
-			for( i = 0; i < n_rows; i++ ){
-				ptr[i] = atof(column.content[i]);
-			}
-			return (void*)ptr;
-		}	
-		else {
-			fatal_error("get_column(...)", "Unknown type!");
-			return NULL;
-		}
-	}
+	Column aux = tab->columns[col1];
+	tab->columns[col1] = tab->columns[col2];
+	tab->columns[col2] = aux;
+}
+
+void apply_to_column(Table* tab, void (*func)(Column), int col) {
+	func(tab->columns[col]);
 }
 
 void apply_to_columns(Table* tab, void (*func)(Column)) {
@@ -239,6 +271,7 @@ void apply_to_columns(Table* tab, void (*func)(Column)) {
 	int col;
 	int n_cols = tab->n_cols;
 	for( col = 0; col < n_cols; col++ ) {
-		func(tab->columns[col]);
+		apply_to_column(tab, func, col);
 	}
 }
+

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-O3 -Wall -ansi
+CFLAGS=-O3 -Wall -ansi -pedantic
 TARGET=main
 TEST=test
 

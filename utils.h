@@ -1,6 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdbool.h>
 #include "table.h"
 
 #define min(x,y) ((x) < (y)) ? (x):(y);
@@ -58,6 +59,12 @@ char* format_string(Type type){
 
 	error("format_string(...)", "Unknown type!"); 
 	return NULL;
+}
+
+bool is_numeric(Type type) {
+	if(type == INT || type == FLOAT || type == DOUBLE)
+		return true;
+	return false;
 }
 
 #endif
