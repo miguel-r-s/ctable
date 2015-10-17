@@ -1,3 +1,6 @@
 TODO:
 
+	- Write more tests
+	- Default column types and names if arrays are NULL.
+	- Sort according to a given function applied to a given column.
 	- Add options to add, subtract, multiply, divide, swap columns, etc...
