@@ -3,7 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
-#include "utils.h"
+#include "table_utils.h"
 #include "table.h"
 
 struct column {
@@ -31,12 +31,13 @@ Table* new_table(int n_cols, char** column_names, Type* types) {
 	
 	for( i = 0; i < n_cols; i++ ) {
 		
-		tab->columns[i].name = malloc(strlen(column_names[i]) + 1);
-		strcpy(tab->columns[i].name, column_names[i]);
+		char* col_name = (column_names != NULL) ? column_names[i]:"\0";
+		tab->columns[i].name = malloc(strlen(col_name) + 1);
+		strcpy(tab->columns[i].name, col_name);
 		
-		tab->columns[i].width = strlen(column_names[i]);
+		tab->columns[i].width = strlen(col_name);
 		tab->columns[i].content = NULL;
-		tab->columns[i].type = types[i];
+		tab->columns[i].type = (types != NULL) ? types[i]:STRING;
 	}
 	
 	return tab;
@@ -132,7 +133,34 @@ void insert(Table* tab, char* content, int col, int row) {
 	}
 	else fatal_error("width(...)", "Unknown type!");
 	
-	column.width = max(column.width, width(column.content, row, column.type));
+	tab->columns[col].width = max(column.width, width(column.content, row, column.type));
+}
+
+void add_column(Table* tab, char* col_name, void* content, Type type){
+	
+	int i, max_width;
+	
+	if( content == NULL ){
+		fatal_error("add_column(...)", "Cannot add NULL column!");
+	}
+	
+	tab->n_cols++;
+	tab->columns = realloc(tab->columns, tab->n_cols * sizeof(Column));
+	
+	tab->columns[tab->n_cols - 1].name = malloc( strlen(col_name) + 1 );
+	strcpy(tab->columns[tab->n_cols - 1].name, col_name);
+	
+	tab->columns[tab->n_cols - 1].content = malloc( tab->n_rows * type_size(type) );
+	memcpy(tab->columns[tab->n_cols - 1].content, content, tab->n_rows * type_size(type));
+	
+	tab->columns[tab->n_cols - 1].type = type;
+	
+	max_width = strlen(col_name);
+	for( i = 0; i < tab->n_rows; i++ ) {
+		max_width = max(max_width, width(content, i, type));
+	}
+	
+	tab->columns[tab->n_cols - 1].width = max_width;
 }
 
 void read_file(Table* tab, char* file_name) {

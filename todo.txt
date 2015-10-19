@@ -1,6 +1,10 @@
 TODO:
 
 	- Write more tests
-	- Default column types and names if arrays are NULL.
+	- Check which finctions aren't needed.
+	- Give add_column(...) an extra argument to specify the index of the column in the table. Currently always last column...
 	- Sort according to a given function applied to a given column.
 	- Add options to add, subtract, multiply, divide, swap columns, etc...
+	
+	
+	[DONE] Default column types and names if arrays are NULL.

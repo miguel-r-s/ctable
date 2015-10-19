@@ -24,9 +24,8 @@ void free_all() {
 int main( int argc, char** argv ) {
 
 	int n_cols = 3;
-	char* cols[3] = {"integer column", "string column", "char column"};
+	char* cols[3] = {"col1", "col2", "col3"};
 	int* integer_column;
-	char* char_column;
 	int i, n_elements; 
 	
 	create_headers(n_cols, cols);
@@ -42,22 +41,8 @@ int main( int argc, char** argv ) {
 		printf("%d ", integer_column[i]);
 	}
 	printf("\n");
-	char_column = (char*)get_column(tab, 2, &n_elements);
-	for( i = 0; i < n_elements; i++ ) {
-		printf("%c ", char_column[i]);
-	}
-	printf("\n");
 	
-	swap_columns(tab, 0, 2);
-	
-	free(integer_column);
-	free(char_column);
-	
-	integer_column = (int*)get_column(tab, 2, &n_elements);
-	for( i = 0; i < n_elements; i++ ) {
-		printf("%d ", integer_column[i]);
-	}
-	printf("\n");
+	add_column(tab, "c", integer_column, INT);
 	
 	free(integer_column);
 	print_table(tab);
