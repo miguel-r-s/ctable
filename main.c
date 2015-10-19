@@ -42,7 +42,8 @@ int main( int argc, char** argv ) {
 	}
 	printf("\n");
 	
-	add_column(tab, "c", integer_column, INT);
+	append_column(tab, "c", integer_column, INT);
+	insert_column(tab, "mycol", integer_column, INT, 0);
 	
 	free(integer_column);
 	print_table(tab);

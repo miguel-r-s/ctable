@@ -62,8 +62,8 @@ char* table_format_string(Table* tab) {
 int count_lines(FILE* file) {
 
 	int n_lines = 0;
-	char buff[1024];
-	while( fgets(buff, 1024, file) ) {
+	char buff[2048];
+	while( fgets(buff, 2048, file) ) {
 		if(!(strlen(buff) == 1 && *buff == '\n'))
 			n_lines++;
 	}
@@ -77,7 +77,7 @@ char* stringify_entry(void* col_content, int row, Type type) {
 	char str[2048];
 	char* ret;
 	char *form = format_string(type);
-	memset(str, '\0', 1024);
+	memset(str, '\0', 2048);
 
 	if(type == CHAR)
 		sprintf(str, form, ((char*)col_content)[row]);
@@ -133,34 +133,63 @@ void insert(Table* tab, char* content, int col, int row) {
 	}
 	else fatal_error("width(...)", "Unknown type!");
 	
-	tab->columns[col].width = max(column.width, width(column.content, row, column.type));
+	tab->columns[col].width = 
+		max(column.width, width(column.content, row, column.type));
 }
 
-void add_column(Table* tab, char* col_name, void* content, Type type){
+/* Inserts a column in a specific position */
+void insert_column(Table* tab,
+					char* col_name,
+					void* content,
+					Type type,
+					int col_position) 
+{
+
+	Column col;
+	int i, n_cols;
+	
+	/* Sanity check. The tab->n_cols + 1 corresponds to 
+	the number of columns after the insertion */
+	if( col_position < 0 || col_position > tab->n_cols + 1 ){
+		fatal_error("insert_column(...)", "Invalid column position!");
+	}
+	
+	append_column(tab, col_name, content, type);
+	n_cols = tab->n_cols;
+	
+	for( i = n_cols - 1; i > col_position; i-- ){
+		col = tab->columns[i];
+		tab->columns[i] = tab->columns[i-1];
+		tab->columns[i-1] = col;
+	}	
+}
+
+void append_column(Table* tab, char* col_name, void* content, Type type){
 	
 	int i, max_width;
-	
+	int col_position;
 	if( content == NULL ){
 		fatal_error("add_column(...)", "Cannot add NULL column!");
 	}
 	
+	col_position = tab->n_cols;
 	tab->n_cols++;
 	tab->columns = realloc(tab->columns, tab->n_cols * sizeof(Column));
 	
-	tab->columns[tab->n_cols - 1].name = malloc( strlen(col_name) + 1 );
-	strcpy(tab->columns[tab->n_cols - 1].name, col_name);
+	tab->columns[col_position].name = malloc( strlen(col_name) + 1 );
+	strcpy(tab->columns[col_position].name, col_name);
 	
-	tab->columns[tab->n_cols - 1].content = malloc( tab->n_rows * type_size(type) );
-	memcpy(tab->columns[tab->n_cols - 1].content, content, tab->n_rows * type_size(type));
+	tab->columns[col_position].content = malloc( tab->n_rows * type_size(type) );
+	memcpy(tab->columns[col_position].content, content, tab->n_rows * type_size(type));
 	
-	tab->columns[tab->n_cols - 1].type = type;
+	tab->columns[col_position].type = type;
 	
 	max_width = strlen(col_name);
 	for( i = 0; i < tab->n_rows; i++ ) {
 		max_width = max(max_width, width(content, i, type));
 	}
 	
-	tab->columns[tab->n_cols - 1].width = max_width;
+	tab->columns[col_position].width = max_width;
 }
 
 void read_file(Table* tab, char* file_name) {
