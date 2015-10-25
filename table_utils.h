@@ -1,22 +1,9 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef TABLE_UTILS_H
+#define TABLE_UTILS_H
 
 #include <stdbool.h>
 #include "table.h"
-
-#define min(x,y) ((x) < (y)) ? (x):(y);
-#define max(x,y) ((x) > (y)) ? (x):(y);
-
-void error(char* func_name, char* message) {
-	
-	fprintf(stderr, "[ERROR] %s: %s\n", func_name, message);
-}
-
-void fatal_error(char* func_name, char* message) {
-
-	error(func_name, message);
-	exit(-1);
-}
+#include "utils.h"
 
 void print_spaces(int n) {
 	
@@ -65,6 +52,22 @@ bool is_numeric(Type type) {
 	if(type == INT || type == FLOAT || type == DOUBLE)
 		return true;
 	return false;
+}
+
+int get_int_len (int value){
+  
+  char n_str[2048];
+  memset(n_str, '\0', 2048);
+  sprintf(n_str, "%d", value); 
+  return strlen(n_str);
+}
+
+int get_double_len (double value){
+  
+  char n_str[2048];
+  memset(n_str, '\0', 2048);
+  sprintf(n_str, "%f", value); 
+  return strlen(n_str);
 }
 
 #endif

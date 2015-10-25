@@ -1,10 +1,8 @@
 TODO:
 
-	- Write more tests
-	- Check which finctions aren't needed.
-	- Give add_column(...) an extra argument to specify the index of the column in the table. Currently always last column...
+	- Finish what's being done in tests.c and table.c (end) - the whole column parsing thing
+	- Build tests in CUnit.
+	- Build a decent Makefile.
 	- Sort according to a given function applied to a given column.
-	- Add options to add, subtract, multiply, divide, swap columns, etc...
 	
 	
-	[DONE] Default column types and names if arrays are NULL.

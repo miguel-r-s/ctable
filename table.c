@@ -3,6 +3,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "shunting-yard/shunting-yard.h"
 #include "table_utils.h"
 #include "table.h"
 
@@ -202,6 +203,7 @@ void read_file(Table* tab, char* file_name) {
 	
 	memset(buff, '\0', 2048); 
 	table_file = fopen(file_name, "r");
+	assert(table_file);
 
 	n_lines = count_lines(table_file);
 	tab->n_rows += n_lines;
@@ -330,5 +332,85 @@ void apply_to_columns(Table* tab, void (*func)(Column)) {
 	for( col = 0; col < n_cols; col++ ) {
 		apply_to_column(tab, func, col);
 	}
+}
+
+
+char* expression_string(const char* expr, double* arr){
+	
+	int i;
+	int col_n;
+	char* final_string = malloc(2048);
+	const char* p = expr;
+	
+	i = 0;
+	while( *p != '\0' ){
+		if( *p == 'c' ){
+			sscanf( p + 1, "%d", &col_n);
+			sprintf(final_string + i, "%f", arr[col_n]);
+			p+=get_int_len(col_n);
+			i+=get_double_len(arr[col_n]);
+		}
+		else {
+			sprintf(final_string + i, "%c", *p);
+			i++;
+		}
+		p++;
+	}
+	return final_string;
+}
+
+/*
+	From a given row, get all the numeric values as 
+	a double. All the entries corresponding to 
+	columns with non-numeric types will be set to zero.
+*/
+double* get_row_array(Table* tab, int row){
+	
+	int col;
+	double* arr = malloc( tab->n_cols * sizeof(double) );
+	void* content;
+	Type type;
+	for( col = 0;  col < tab->n_cols; col++ ){
+	
+		type = tab->columns[col].type;
+		content = tab->columns[col].content;
+		if( is_numeric(type) ) {
+		
+			if( type == DOUBLE )
+				arr[col] = (double)((double*)content)[row];	
+			else if ( type == INT )
+				arr[col] = (double)((int*)content)[row];	
+			else if ( type == FLOAT )
+				arr[col] = (double)((float*)content)[row];	
+		}
+		else arr[col] = 0.;
+	}
+	
+	return arr;
+}
+
+void insert_calc_column(Table* tab, const char* expr, char* col_name) {
+	
+	int row;
+	char* expr_str;
+	double solution;
+	double* arr;
+	double* new_col = malloc( tab->n_rows * sizeof(double) );
+
+	if( col_name == NULL )
+		col_name = (char*)expr;
+
+	for( row = 0; row < tab->n_rows; row++ ) {
+		
+		arr = get_row_array(tab, row);
+		expr_str = expression_string(expr, arr);
+		shunting_yard(expr_str, &solution);
+		free(expr_str);
+		free(arr);
+		new_col[row] = solution;
+	}
+	
+	append_column(tab, col_name, (void*)new_col, DOUBLE);
+	free(new_col);
 }
 

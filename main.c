@@ -21,7 +21,7 @@ void free_all() {
 	free(types);
 }
 
-int main( int argc, char** argv ) {
+void tests_columns( int argc, char** argv ) {
 
 	int n_cols = 3;
 	char* cols[3] = {"col1", "col2", "col3"};
@@ -48,7 +48,35 @@ int main( int argc, char** argv ) {
 	free(integer_column);
 	print_table(tab);
 	free_all();
+}
+
+void test_calc_column() {
+
+	Type types[4] = {INT, FLOAT, DOUBLE, STRING};
+	char* col_names[] = {
+		"integer",
+		"floating point",
+		"double precision",
+		"ascii string"
+	};
 	
+	Table* tab = new_table(4, col_names, types );
+	read_file(tab, "test_files/test_ifds.dat");
+	print_table(tab);
+	
+	insert_calc_column(tab, "c0", NULL);
+	insert_calc_column(tab, "c1", NULL);
+	insert_calc_column(tab, "c2", NULL);
+	insert_calc_column(tab, "c3", NULL);
+	insert_calc_column(tab, "c0+c1+c2+c3", NULL);
+	print_table(tab);
+	free_table(tab);
+}
+
+int main( int argc, char** argv ) {
+	
+	/*tests_columns(argc, argv);*/
+	test_calc_column();
 	return 0;
 }
 
