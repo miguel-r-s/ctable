@@ -61,5 +61,46 @@ char_column = (char*)get_column(tab, 2, &n_elements)
 
 The return in this example would be the array containing `a b c d e f g h i j`.
 
+## Performing calculations on data
+
+The scouts are out to sell some cake! Scouts sell cake at different prices, and also collect donations.
+The columns represent the scout's name, number of slices sold, price of each slice and total donations reveived.
+
+```
+Joe 10 3.99 2
+Marta 8 14.49 10
+Mike 3 39.00 2
+Billy 220 0.99 2
+```
+Once we parse the file automatically into the structure, we get:
+
+```
++------------+------------+-----------+-----------+
+| Scout name | Units Sold | Price     | Donations | 
++------------+------------+-----------+-----------+
+| Joe        | 10         | 3.990000  | 2.000000  | 
+| Marta      | 8          | 14.490000 | 10.000000 | 
+| Mike       | 3          | 39.000000 | 2.000000  | 
+| Billy      | 220        | 0.990000  | 2.000000  | 
++------------+------------+-----------+-----------+
+```
+We now want to know how much money each of the scouts actually made. That's `column 1 * column 2 + column 3`, considering the column numbers are zero-indexed.
+
+So we write `insert_calc_column(table, "c1*c2 + c3", "Scout's Total");`, and we get:
+
+```
++------------+------------+-----------+-----------+---------------+
+| Scout name | Units Sold | Price     | Donations | Scout's Total | 
++------------+------------+-----------+-----------+---------------+
+| Joe        | 10         | 3.990000  | 2.000000  | 41.900000     | 
+| Marta      | 8          | 14.490000 | 10.000000 | 125.920000    | 
+| Mike       | 3          | 39.000000 | 2.000000  | 119.000000    | 
+| Billy      | 220        | 0.990000  | 2.000000  | 219.800000    | 
++------------+------------+-----------+-----------+---------------+
+```
+It's simple and easy!
+
+In the next commits, I'll probably add functions that allow us to operate on a specific column in an elegant way. For instance, we may want to calculate how much money all scouts generated. 
+
 # Contributions
 Any code is welcome!
