@@ -321,10 +321,35 @@ void swap_columns(Table* tab, int col1, int col2){
 	tab->columns[col2] = aux;
 }
 
-void apply_to_column(Table* tab, void (*func)(Column), int col) {
-	func(tab->columns[col]);
+double sum_column(Table* tab, int col){
+	
+	int row;
+	double result;
+	void* content;
+	Type type = tab->columns[col].type;
+	if( !is_numeric(type))
+		return 0; 
+	
+	result = 0;
+	content = tab->columns[col].content;
+	for( row = 0; row < tab->n_rows; row++ ){
+		
+		if( type == DOUBLE )
+			result += (double)((double*)content)[row];	
+		else if ( type == INT )
+			result += (double)((int*)content)[row];	
+		else if ( type == FLOAT )
+			result += (double)((float*)content)[row];	
+	}
+	return result;
 }
 
+double apply_to_column(Table* tab, int col,
+						double (*func)(Table*, int)) {
+	return func(tab, col);
+}
+
+/*
 void apply_to_columns(Table* tab, void (*func)(Column)) {
 
 	int col;
@@ -333,7 +358,7 @@ void apply_to_columns(Table* tab, void (*func)(Column)) {
 		apply_to_column(tab, func, col);
 	}
 }
-
+*/
 
 char* expression_string(const char* expr, double* arr){
 	

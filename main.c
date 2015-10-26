@@ -1,54 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include "table.h"
+#include "minunit.h"
 
-Table* tab;
-Type* types;
-
-void create_headers(int n_cols, char** names) {
-
-	types = malloc(n_cols * sizeof(Type));	
-	types[0] = INT;
-	types[1] = STRING;
-	types[2] = CHAR;
-	tab = new_table(n_cols, names, types);
-}
-
-void free_all() {
-	
-	free_table(tab);
-	free(types);
-}
-
-void tests_columns( int argc, char** argv ) {
-
-	int n_cols = 3;
-	char* cols[3] = {"col1", "col2", "col3"};
-	int* integer_column;
-	int i, n_elements; 
-	
-	create_headers(n_cols, cols);
-	print_table(tab);
-	
-	assert(argc > 1);
-	read_file(tab, argv[1]);
-	printf("\n\n");
-	print_table(tab);
-	
-	integer_column = (int*)get_column(tab, 0, &n_elements);
-	for( i = 0; i < n_elements; i++ ) {
-		printf("%d ", integer_column[i]);
-	}
-	printf("\n");
-	
-	append_column(tab, "c", integer_column, INT);
-	insert_column(tab, "mycol", integer_column, INT, 0);
-	
-	free(integer_column);
-	print_table(tab);
-	free_all();
-}
+int tests_run = 0;
+int tests_passed = 0;
 
 void test_calc_column() {
 
@@ -73,10 +31,187 @@ void test_calc_column() {
 	free_table(tab);
 }
 
+static char* test_column_read_iii() {
+	int i, n_elements;
+	Type types[3] = {INT, FLOAT, DOUBLE};
+	Table* tab = new_table(3, NULL, types); 
+	read_file(tab, "test_files/sum_cols.table");
+	
+	int i_arr[5] = {0,0,0,0,0};
+	float f_arr[5] = {1,1,1,1,1};
+	double d_arr[5] = {2,2,2,2,2};
+	
+	int* i_arr_table = (int*)get_column(tab, 0, &n_elements);
+	float* f_arr_table = (float*)get_column(tab, 1, &n_elements);
+	double* d_arr_table = (double*)get_column(tab, 2, &n_elements);
+	
+	mu_assert("Wrong number of elements!\n", n_elements == 5);
+	for( i = 0; i < 5; i++ ){
+		mu_assert("Wrong int element!", i_arr[i] == i_arr_table[i]);
+		mu_assert("Wrong float element!", f_arr[i] == f_arr_table[i]);
+		mu_assert("Wrong double element!", d_arr[i] == d_arr_table[i]);
+	}
+	
+	free(i_arr_table);
+	free(f_arr_table);
+	free(d_arr_table);
+	free_table(tab);
+	return 0;
+}
+
+static char* test_column_read_ifds() {
+	int i, n_elements;
+	Type types[4] = {INT, FLOAT, DOUBLE, STRING};
+	Table* tab = new_table(4, NULL, types); 
+	read_file(tab, "test_files/test_ifds.table");
+	
+	int i_arr[2] = {1,4};
+	float f_arr[2] = {1.2,2.3};
+	double d_arr[2] = {3.1234, 12.341234};
+	char* s_arr[2] = {"test_string", "this_is_a_test"};
+	
+	int* i_arr_table = (int*)get_column(tab, 0, &n_elements);
+	float* f_arr_table = (float*)get_column(tab, 1, &n_elements);
+	double* d_arr_table = (double*)get_column(tab, 2, &n_elements);
+	char** s_arr_table = (char**)get_column(tab, 3, &n_elements);
+	
+	mu_assert("Wrong number of elements!\n", n_elements == 2);
+	for( i = 0; i < 2; i++ ){
+		mu_assert("Wrong int element!", i_arr[i] == i_arr_table[i]);
+		mu_assert("Wrong float element!", f_arr[i] == f_arr_table[i]);
+		mu_assert("Wrong double element!", d_arr[i] == d_arr_table[i]);
+		mu_assert("Wrong string element!", strcmp(s_arr[i], s_arr_table[i]) == 0);
+	}
+	
+	free(i_arr_table);
+	free(f_arr_table);
+	free(d_arr_table);
+	free(s_arr_table);
+	free_table(tab);
+	return 0;
+}
+
+static char* test_sum_columns() {
+	
+	double result;
+	Type types[3] = {INT, INT, INT};
+	Table* tab = new_table(3, NULL, types); 
+	read_file(tab, "test_files/sum_cols.table");
+	insert_calc_column(tab, "c0+c1+c2", NULL);
+	result = apply_to_column(tab, 3, sum_column);
+	mu_assert("Wrong sum!\n", result == 15.);
+	
+	free_table(tab);
+	return 0;
+}
+
+static char* test_sum_columns_and_powers() {
+	
+	double result;
+	Type types[3] = {INT, INT, INT};
+	Table* tab = new_table(3, NULL, types); 
+	read_file(tab, "test_files/sum_cols.table");
+	insert_calc_column(tab, "c1*c2^2", NULL);
+	result = apply_to_column(tab, 3, sum_column);
+	mu_assert("Wrong sum of powers!\n", result == 20.);
+	
+	free_table(tab);
+	return 0;
+}
+
+static char* test_column_swap() {
+
+	int i, n_elements;
+	Type types[4] = {INT, FLOAT, DOUBLE, STRING};
+	Table* tab = new_table(4, NULL, types); 
+	read_file(tab, "test_files/test_ifds.table");
+	
+	int i_arr[2] = {1,4};
+	float f_arr[2] = {1.2,2.3};
+	double d_arr[2] = {3.1234, 12.341234};
+	char* s_arr[2] = {"test_string", "this_is_a_test"};
+	
+	int* i_arr_table = (int*)get_column(tab, 0, &n_elements);
+	float* f_arr_table = (float*)get_column(tab, 1, &n_elements);
+	double* d_arr_table = (double*)get_column(tab, 2, &n_elements);
+	char** s_arr_table = (char**)get_column(tab, 3, &n_elements);
+		
+	mu_assert("Wrong number of elements!\n", n_elements == 2);
+	for( i = 0; i < 2; i++ ){
+		mu_assert("Wrong int element!", i_arr[i] == i_arr_table[i]);
+		mu_assert("Wrong float element!", f_arr[i] == f_arr_table[i]);
+		mu_assert("Wrong double element!", d_arr[i] == d_arr_table[i]);
+		mu_assert("Wrong string element!",
+			strcmp(s_arr[i], s_arr_table[i]) == 0);
+	}
+	
+	free(i_arr_table);
+	free(f_arr_table);
+	free(d_arr_table);
+	free(s_arr_table);
+	
+	swap_columns(tab, 0, 2);
+	swap_columns(tab, 1, 3);
+	
+	i_arr_table = (int*)get_column(tab, 2, &n_elements);
+	f_arr_table = (float*)get_column(tab, 3, &n_elements);
+	d_arr_table = (double*)get_column(tab, 0, &n_elements);
+	s_arr_table = (char**)get_column(tab, 1, &n_elements);
+	
+	mu_assert("Wrong number of elements!\n", n_elements == 2);
+	for( i = 0; i < 2; i++ ){
+		mu_assert("Wrong int element!", i_arr[i] == i_arr_table[i]);
+		mu_assert("Wrong float element!", f_arr[i] == f_arr_table[i]);
+		mu_assert("Wrong double element!", d_arr[i] == d_arr_table[i]);
+		mu_assert("Wrong string element!",
+			strcmp(s_arr[i], s_arr_table[i]) == 0);
+	}
+	
+	free(i_arr_table);
+	free(f_arr_table);
+	free(d_arr_table);
+	free(s_arr_table);
+	free_table(tab);
+	
+	return 0;
+}
+
+static char* test_column_append() {
+	return 0;
+}
+
+static char* test_column_insert() {
+	return 0;
+}
+
+static char* all_tests() {
+
+	mu_run_test(test_column_read_iii);
+	mu_run_test(test_column_read_ifds);
+	mu_run_test(test_column_swap);
+	mu_run_test(test_sum_columns);
+	mu_run_test(test_sum_columns_and_powers);
+	return 0;
+}
+
+void tests_statistics() {
+	
+	int failed = tests_run - tests_passed;
+	double ratio = (double)tests_passed/tests_run;
+	printf("Passed %d tests out of %d.\n", tests_passed, tests_run);
+	printf("Ratio: %f\n", ratio);
+	printf("Failed: %d\n", failed);
+}
+
 int main( int argc, char** argv ) {
 	
-	/*tests_columns(argc, argv);*/
-	test_calc_column();
-	return 0;
+    char *result = all_tests();
+    if (result != 0) {
+        printf("%s\n", result);
+    }
+  
+	tests_statistics();
+  	
+    return 0;
 }
 
