@@ -1,6 +1,6 @@
 TODO:
 	
-	- Organize the project in folders.
+	- Build a cool demo of what the project should do.
 	- Replace tests by Zed Shaw's (http://c.learncodethehardway.org/book/ex30.html)
 	- Build a decent Makefile.
 	- Sort according to a given function applied to a given column.
