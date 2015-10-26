@@ -1,7 +1,7 @@
 TODO:
-
-	- Finish what's being done in tests.c and table.c (end) - the whole column parsing thing
-	- Build tests in CUnit.
+	
+	- Organize the project in folders.
+	- Replace tests by Zed Shaw's (http://c.learncodethehardway.org/book/ex30.html)
 	- Build a decent Makefile.
 	- Sort according to a given function applied to a given column.
 	

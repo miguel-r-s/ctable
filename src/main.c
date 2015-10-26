@@ -189,6 +189,8 @@ static char* all_tests() {
 	mu_run_test(test_column_read_iii);
 	mu_run_test(test_column_read_ifds);
 	mu_run_test(test_column_swap);
+	mu_run_test(test_column_append);
+	mu_run_test(test_column_insert);
 	mu_run_test(test_sum_columns);
 	mu_run_test(test_sum_columns_and_powers);
 	return 0;
