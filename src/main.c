@@ -98,7 +98,7 @@ static char* test_sum_columns() {
 	Table* tab = new_table(3, NULL, types); 
 	read_file(tab, "test_files/sum_cols.table");
 	insert_calc_column(tab, "c0+c1+c2", NULL);
-	result = apply_to_column(tab, 3, sum_column);
+	result = sum_column(tab, 3);
 	mu_assert("Wrong sum!\n", result == 15.);
 	
 	free_table(tab);
@@ -112,7 +112,7 @@ static char* test_sum_columns_and_powers() {
 	Table* tab = new_table(3, NULL, types); 
 	read_file(tab, "test_files/sum_cols.table");
 	insert_calc_column(tab, "c1*c2^2", NULL);
-	result = apply_to_column(tab, 3, sum_column);
+	result = sum_column(tab, 3);
 	mu_assert("Wrong sum of powers!\n", result == 20.);
 	
 	free_table(tab);
@@ -176,6 +176,49 @@ static char* test_column_swap() {
 	return 0;
 }
 
+static char* test_write_to_file() {
+	
+	FILE* fp;
+	Table* tab1;
+	Table* tab2;
+	Type types[4] = {INT, FLOAT, DOUBLE, STRING};
+	
+	tab1 = new_table(4, NULL, types);
+	tab2 = new_table(4, NULL, types); 
+	
+	fp = fopen("/tmp/test_write.txt", "w");
+	read_file(tab1, "test_files/test_ifds.table");
+	write_to_file(tab1, fp);
+	fclose(fp);
+	
+	int n_elements;
+	int* t1c0 = (int*)get_column(tab1, 0, &n_elements);
+	float* t1c1 = (float*)get_column(tab1, 1, &n_elements);
+	double* t1c2 = (double*)get_column(tab1, 2, &n_elements);
+	char** t1c3 = (char**)get_column(tab1, 3, &n_elements);
+	
+	read_file(tab2, "/tmp/test_write.txt");
+	
+	int* t2c0 = (int*)get_column(tab2, 0, &n_elements);
+	float* t2c1 = (float*)get_column(tab2, 1, &n_elements);
+	double* t2c2 = (double*)get_column(tab2, 2, &n_elements);
+	char** t2c3 = (char**)get_column(tab2, 3, &n_elements);
+	
+	int i;
+	for( i = 0; i < 2; i++ ){
+		mu_assert("Wrong int element!", t1c0[i] == t2c0[i]);
+		mu_assert("Wrong float element!", t1c1[i] == t2c1[i]);
+		mu_assert("Wrong double element!", t1c2[i] == t2c2[i]);
+		mu_assert("Wrong string element!",
+			strcmp(t1c3[i], t2c3[i]) == 0);
+	}
+	
+	free_table(tab1);
+	free_table(tab2);
+
+	return 0;
+}
+
 static char* test_column_append() {
 	return 0;
 }
@@ -193,6 +236,7 @@ static char* all_tests() {
 	mu_run_test(test_column_insert);
 	mu_run_test(test_sum_columns);
 	mu_run_test(test_sum_columns_and_powers);
+	mu_run_test(test_write_to_file);
 	return 0;
 }
 

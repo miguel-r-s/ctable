@@ -235,14 +235,14 @@ int* get_cols_width(Table* tab) {
 	return cols_width;
 }
 
-int print_content( void* col_content, int row, Type type ) {
+int print_content( void* col_content, int row, Type type, FILE* fp ) {
 
 	char* content = stringify_entry(col_content, row, type);
 	if( content == NULL ) {
 		content = "<null>";
 	}
 
-	fprintf(stdout, "%s", content);
+	fprintf(fp, "%s", content);
 	free(content);
 	return width(col_content, row, type);
 }
@@ -271,7 +271,7 @@ void print_table(Table* tab) {
 		
 			void* content = tab->columns[i].content;
 			Type type = tab->columns[i].type;
-			printed_len = print_content( content, j, type );
+			printed_len = print_content( content, j, type, stdout );
 			print_spaces(cols_width[i] - printed_len + 1);
 			printf("%c ", VLINE);
 		}
@@ -343,22 +343,6 @@ double sum_column(Table* tab, int col){
 	}
 	return result;
 }
-
-double apply_to_column(Table* tab, int col,
-						double (*func)(Table*, int)) {
-	return func(tab, col);
-}
-
-/*
-void apply_to_columns(Table* tab, void (*func)(Column)) {
-
-	int col;
-	int n_cols = tab->n_cols;
-	for( col = 0; col < n_cols; col++ ) {
-		apply_to_column(tab, func, col);
-	}
-}
-*/
 
 char* expression_string(const char* expr, double* arr){
 	
@@ -438,4 +422,19 @@ void insert_calc_column(Table* tab, const char* expr, char* col_name) {
 	append_column(tab, col_name, (void*)new_col, DOUBLE);
 	free(new_col);
 }
+
+void write_to_file( Table* tab, FILE* fp ){
+	
+	int col, row;
+	for( row = 0; row < tab->n_rows; row++ ){
+		for( col = 0; col < tab->n_cols; col++ ) {
+			void* content =  tab->columns[col].content;
+			Type type = tab->columns[col].type;
+			print_content( content, row, type, fp );
+			fprintf(fp, "\t");
+		}
+		fprintf(fp, "\n");
+	}
+}
+
 

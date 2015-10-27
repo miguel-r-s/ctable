@@ -26,9 +26,8 @@ void append_column(Table* tab, char* col_name, void* content, Type type);
 void insert_column(Table* tab, char* col_name, void* content, Type type, int col_position);
 void insert_calc_column(Table* tab, const char* expr, char* col_name);
 double sum_column(Table* tab, int col);
-double apply_to_column(Table* tab, int col, double (*func)(Table* tab, int col));
-/*void apply_to_columns(Table* tab, void (*func)(Column)); */
 void print_table(Table* tab);
+void write_to_file( Table* tab, FILE* fp );
 void free_table(Table* tab);
 
 #endif

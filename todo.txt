@@ -1,8 +1,12 @@
 TODO:
 	
-	- Build a cool demo of what the project should do.
+	- Swap 2 rows.
+	- Delete row
+	- Delete column
+	- Include more sanity checks through the code to prevent stupid user mistakes.
+	- Build a cool demo of what the project should do (example: calculate the total of a shopping list with discounts), calculate total VAT payed, etc...)
 	- Replace tests by Zed Shaw's (http://c.learncodethehardway.org/book/ex30.html)
-	- Build a decent Makefile.
+	- Build a decent Makefile. Maybe, just maybe, use automake.
 	- Sort according to a given function applied to a given column.
 	
 	
