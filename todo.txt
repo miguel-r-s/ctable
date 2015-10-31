@@ -2,11 +2,14 @@ TODO:
 	
 	- Swap 2 rows.
 	- Delete row
-	- Delete column
+	- Copy table
+	- Compare tables
+	- Change a single entry in a table
+	- Replace a column by another, given as a parameter.
+	- Sort according to a given function applied to a given column. Use a stable sorting algorithm.
 	- Include more sanity checks through the code to prevent stupid user mistakes.
 	- Build a cool demo of what the project should do (example: calculate the total of a shopping list with discounts), calculate total VAT payed, etc...)
 	- Replace tests by Zed Shaw's (http://c.learncodethehardway.org/book/ex30.html)
 	- Build a decent Makefile. Maybe, just maybe, use automake.
-	- Sort according to a given function applied to a given column.
 	
 	

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include "table.h"
+#include "ctable.h"
 #include "minunit.h"
 
 int tests_run = 0;
@@ -213,6 +213,16 @@ static char* test_write_to_file() {
 			strcmp(t1c3[i], t2c3[i]) == 0);
 	}
 	
+	free(t1c0);
+	free(t1c1);
+	free(t1c2);
+	free(t1c3);
+	
+	free(t2c0);
+	free(t2c1);
+	free(t2c2);
+	free(t2c3);
+	
 	free_table(tab1);
 	free_table(tab2);
 
@@ -220,10 +230,38 @@ static char* test_write_to_file() {
 }
 
 static char* test_column_append() {
+
 	return 0;
 }
 
 static char* test_column_insert() {
+
+	return 0;
+}
+
+static char* test_delete_column() {
+
+	Type types[3] = {INT, INT, INT};
+	Table* tab = new_table(3, NULL, types); 
+	read_file(tab, "test_files/sum_cols.table");
+	
+	delete_column(tab, 12);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 3);
+	delete_column(tab, 1);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 2);
+	delete_column(tab, 0);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 1);
+	delete_column(tab, 0);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 0);
+	delete_column(tab, 1234);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 0);
+	delete_column(tab, -1);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 0);
+	delete_column(tab, 2);
+	mu_assert("Wrong number of columns!", num_cols(tab) == 0);
+	
+	free_table(tab);
+	
 	return 0;
 }
 
@@ -237,6 +275,7 @@ static char* all_tests() {
 	mu_run_test(test_sum_columns);
 	mu_run_test(test_sum_columns_and_powers);
 	mu_run_test(test_write_to_file);
+	mu_run_test(test_delete_column);
 	return 0;
 }
 
@@ -245,7 +284,7 @@ void tests_statistics() {
 	int failed = tests_run - tests_passed;
 	double ratio = (double)tests_passed/tests_run;
 	printf("Passed %d tests out of %d.\n", tests_passed, tests_run);
-	printf("Ratio: %f\n", ratio);
+	printf("Percentage: %.2f%%\n", 100*ratio);
 	printf("Failed: %d\n", failed);
 }
 

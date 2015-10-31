@@ -28,6 +28,10 @@ void insert_calc_column(Table* tab, const char* expr, char* col_name);
 double sum_column(Table* tab, int col);
 void print_table(Table* tab);
 void write_to_file( Table* tab, FILE* fp );
+void delete_column(Table* tab, int col);
 void free_table(Table* tab);
+
+int num_rows(Table* tab);
+int num_cols(Table* tab);
 
 #endif

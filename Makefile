@@ -2,35 +2,35 @@ CC=gcc
 CFLAGS=-O3 -Wall
 TARGET=main
 TEST=test
+BINDIR=build
 
-vpath %.o src/
-vpath %.c src/
-vpath %.h src/
+vpath %.o $(BINDIR)
+vpath %.c src:tests
+vpath %.h src
 
-default: main
+default:
+	@echo "No target selected!"
 
-main: table.o main.o shunting-yard.o stack.o
-		$(CC) $(CFLAGS) src/*.o -o $(TARGET).exe -lm
+tests: tests.o ctable.o shunting-yard.o stack.o
+		$(CC) $(CFLAGS) $(BINDIR)/*.o -o tests/tests.exe -lm -I src/
 
-test_files/%: table.o
-		$(CC) $(CFLAGS) src/table.o $@.c -o $@.exe
-
-main.o: main.c
-		$(CC) $(CFLAGS) -c src/main.c \
-			-o src/main.o
+tests.o: tests.c
+		$(CC) $(CFLAGS) -c tests/tests.c \
+			-o $(BINDIR)/tests.o -I src/
 		
-table.o: table.c table.h
-		$(CC) $(CFLAGS) -c src/table.c \
-			-o src/table.o
+ctable.o: ctable.c ctable.h
+		$(CC) $(CFLAGS) -c src/ctable.c \
+			-o $(BINDIR)/ctable.o
 		
 shunting-yard.o: shunting-yard/shunting-yard.c shunting-yard/shunting-yard.h
 		$(CC) $(CFLAGS) -c src/shunting-yard/shunting-yard.c \
-			-o src/shunting-yard.o
+			-o $(BINDIR)/shunting-yard.o
 		
 stack.o: shunting-yard/stack.c shunting-yard/stack.h
 		$(CC) $(CFLAGS) -c src/shunting-yard/stack.c  \
-			-o src/stack.o
+			-o $(BINDIR)/stack.o
 		
 clean:
-		rm -rf *.o src/*.o
-		rm -rf *.exe src/test_files/*.exe 
+		rm -rf $(BINDIR)/*.o
+		rm -rf *.exe *.exe 
+		

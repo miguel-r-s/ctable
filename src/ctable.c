@@ -4,8 +4,8 @@
 #include <assert.h>
 
 #include "shunting-yard/shunting-yard.h"
-#include "table_utils.h"
-#include "table.h"
+#include "ctable_utils.h"
+#include "ctable.h"
 
 struct column {
 
@@ -180,8 +180,10 @@ void append_column(Table* tab, char* col_name, void* content, Type type){
 	tab->columns[col_position].name = malloc( strlen(col_name) + 1 );
 	strcpy(tab->columns[col_position].name, col_name);
 	
-	tab->columns[col_position].content = malloc( tab->n_rows * type_size(type) );
-	memcpy(tab->columns[col_position].content, content, tab->n_rows * type_size(type));
+	tab->columns[col_position].content =
+		malloc( tab->n_rows * type_size(type) );
+	memcpy(tab->columns[col_position].content,
+		content, tab->n_rows * type_size(type));
 	
 	tab->columns[col_position].type = type;
 	
@@ -210,8 +212,9 @@ void read_file(Table* tab, char* file_name) {
 	
 	/* Realloc columns */
 	for( col = 0; col < n_cols; col++ ) {
-		tab->columns[col].content = realloc(tab->columns[col].content, 
-									tab->n_rows * type_size(tab->columns[col].type)); 
+		tab->columns[col].content = 
+			realloc(tab->columns[col].content, 
+			tab->n_rows * type_size(tab->columns[col].type)); 
 	}
 	
 	for( i = 0; i < n_lines; i++ ) {
@@ -437,4 +440,46 @@ void write_to_file( Table* tab, FILE* fp ){
 	}
 }
 
+void delete_column(Table* tab, int col){
+
+	int i, row;
+	Type type;
+	
+	if( col > tab->n_cols - 1 || col < 0 || tab->n_cols == 0 )
+		return;
+	
+	type = tab->columns[col].type;
+	
+	if( type == STRING ) {
+		/* Free each string */
+		for( row = 0; row < tab->n_rows; row++ ){
+			free(((char**)tab->columns[col].content)[row]);
+		}
+	}
+	free(tab->columns[col].content);
+	free(tab->columns[col].name);
+	
+	for( i = col; i < tab->n_cols - 1; i++ ) {
+	
+		tab->columns[i].name = tab->columns[i+1].name;
+		tab->columns[i].width = tab->columns[i+1].width;
+		tab->columns[i].content = tab->columns[i+1].content;
+		tab->columns[i].type = tab->columns[i+1].type;
+	}
+	/* Set the pointers to NULL,
+		just to be safe */
+	tab->columns[tab->n_cols - 1].name = NULL;
+	tab->columns[tab->n_cols - 1].content = NULL;
+	
+	tab->n_cols--;
+	tab->columns = realloc(tab->columns, tab->n_cols * sizeof(Column) );
+}
+
+int num_rows(Table* tab) {
+	return tab->n_rows;
+}
+
+int num_cols(Table* tab) {
+	return tab->n_cols;
+}
 

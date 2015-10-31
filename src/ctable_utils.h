@@ -2,7 +2,7 @@
 #define TABLE_UTILS_H
 
 #include <stdbool.h>
-#include "table.h"
+#include "ctable.h"
 #include "utils.h"
 
 void print_spaces(int n) {
