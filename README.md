@@ -100,7 +100,5 @@ So we write `insert_calc_column(table, "c1*c2 + c3", "Scout's Total");`, and we 
 ```
 It's simple and easy!
 
-In the next commits, I'll probably add functions that allow us to operate on a specific column in an elegant way. For instance, we may want to calculate how much money all scouts generated. 
-
 # Contributions
 Any code is welcome!
