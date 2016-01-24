@@ -265,6 +265,21 @@ static char* test_delete_column() {
 	return 0;
 }
 
+static char* test_compare_tables(){
+	
+	Type types[4] = {INT, FLOAT, DOUBLE, STRING};
+	Table* tab1 = new_table(4, NULL, types); 
+	Table* tab2 = new_table(4, NULL, types); 
+	read_file(tab1, "test_files/test_ifds.table");
+	read_file(tab2, "test_files/test_ifds.table");
+	
+	mu_assert("Equal tables interpreted as different", tables_equal(tab1, tab2));
+	
+	free_table(tab1);
+	free_table(tab2);
+	return 0;
+}
+
 static char* all_tests() {
 
 	mu_run_test(test_column_read_iii);
@@ -276,6 +291,7 @@ static char* all_tests() {
 	mu_run_test(test_sum_columns_and_powers);
 	mu_run_test(test_write_to_file);
 	mu_run_test(test_delete_column);
+	mu_run_test(test_compare_tables);
 	return 0;
 }
 

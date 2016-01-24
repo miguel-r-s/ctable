@@ -475,6 +475,53 @@ void delete_column(Table* tab, int col){
 	tab->columns = realloc(tab->columns, tab->n_cols * sizeof(Column) );
 }
 
+bool tables_equal(Table* tab1, Table* tab2) {
+
+	int col, row;
+	
+	if( tab1 == NULL && tab2 == NULL ) return true;
+	if( tab1->n_cols != tab2->n_cols ) return false;
+	if( tab1->n_rows != tab2->n_rows ) return false;
+	
+	/* Check column titles */
+	for( col = 0; col < tab1->n_cols; col++ ){
+		if( strcmp(tab1->columns[col].name, tab2->columns[col].name) )
+			return false; 
+	}
+	
+	/* Check content */
+	for ( col = 0; col < tab1->n_cols; col++ ) {
+		Type type = tab1->columns[col].type;
+		for ( row = 0; row < tab1->n_rows; row++ ) {
+			
+			char* str1 = 
+				stringify_entry(tab1->columns[col].content, row, type);
+			char* str2 = 
+				stringify_entry(tab2->columns[col].content, row, type);
+			
+			if( strcmp(str1, str2) )
+				return false;
+			free(str1);
+			free(str2);
+		} 
+	} 
+	
+	return true;
+}
+
+void update_numerical_entry (Table* tab, int row, int col, double n) {
+	
+	Type type = tab->columns[col].type;
+	
+	if( type == INT ) 
+		((int*)tab->columns[col].content)[row] = (int)n;
+	else if ( type == FLOAT )
+		((float*)tab->columns[col].content)[row] = (float)n;
+	else if ( type == DOUBLE )
+		((double*)tab->columns[col].content)[row] = n;
+	else error("update_numerical_entry", "Unknown type!");
+}
+
 int num_rows(Table* tab) {
 	return tab->n_rows;
 }

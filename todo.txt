@@ -3,7 +3,6 @@ TODO:
 	- Swap 2 rows.
 	- Delete row
 	- Copy table
-	- Compare tables
 	- Change a single entry in a table
 	- Replace a column by another, given as a parameter.
 	- Sort according to a given function applied to a given column. Use a stable sorting algorithm.
